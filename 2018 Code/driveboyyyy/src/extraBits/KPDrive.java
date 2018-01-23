@@ -1,6 +1,9 @@
 package extraBits;
 
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.drive.RobotDriveBase;
 import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.hal.FRCNetComm.tInstances;
@@ -11,18 +14,25 @@ public class KPDrive extends RobotDriveBase
 {
 	private static int instances = 0;
 	private SpeedController lf, lb, rf, rb;
+	private ADXRS450_Gyro gyro;
+	private Encoder lenc, renc;
 	private boolean m_reported = false;
 	
-	public KPDrive(SpeedController leftForward, SpeedController leftBackward, SpeedController rightForward, SpeedController rightBackward)
+	public KPDrive(int leftForward, int leftBackward, int rightForward, int rightBackward, int leftEncoderForward, int leftEncoderBackward, int rightEncoderForward, int rightEncoderBackward)
 	{
-		lf = leftForward;
-		lb = leftBackward;
-	    rf = rightForward;
-	    rb = rightBackward;
+		lf = new Talon(leftForward);
+		lb = new Talon(leftBackward);
+	    rf = new Talon(rightForward);
+	    rb = new Talon(rightBackward);
 	    addChild(lf);
 	    addChild(lb);
 	    addChild(rf);
 	    addChild(rb);
+	    this.gyro = new ADXRS450_Gyro();
+		lenc = new Encoder(leftEncoderForward, leftEncoderBackward);
+		renc = new Encoder(rightEncoderForward, rightEncoderBackward);
+		lenc.setDistancePerPulse(1);
+		renc.setDistancePerPulse(1);
 	    instances++;
 	    setName("KPDrive", instances);
 	}
@@ -40,11 +50,8 @@ public class KPDrive extends RobotDriveBase
 			m_reported = true;
 		}
 		
-		leftSpeed = limit(leftSpeed);
-		leftSpeed = applyDeadband(leftSpeed, m_deadband);
-		
-		rightSpeed = limit(rightSpeed);
-		rightSpeed = applyDeadband(rightSpeed, m_deadband);
+		leftSpeed = applyDeadband(limit(leftSpeed), m_deadband);
+		rightSpeed = applyDeadband(limit(rightSpeed), m_deadband);
 		
 		if (squaredInputs)
 		{
@@ -58,6 +65,63 @@ public class KPDrive extends RobotDriveBase
 		rb.set(rightSpeed * m_maxOutput);
 		
 		m_safetyHelper.feed();
+	}
+	
+	public void XDrive(double forward, double backward, double steering)
+	{
+		XDrive(forward, backward, steering, true);
+	}
+	
+	public void XDrive(double forward, double backward, double steering, boolean squaredInputs)
+	{
+	    if (!m_reported)
+	    {
+	        HAL.report(tResourceType.kResourceType_RobotDrive, 2, tInstances.kRobotDrive_ArcadeStandard);
+	        m_reported = true;
+	    }
+	    
+	    double leftSpeed = applyDeadband(limit(forward - backward + steering), m_deadband),
+	    	  rightSpeed = applyDeadband(limit(forward - backward - steering), m_deadband);
+	    
+	    if (squaredInputs)
+	    {
+	    	leftSpeed = Math.copySign(leftSpeed * leftSpeed, leftSpeed);
+			rightSpeed = Math.copySign(rightSpeed * rightSpeed, rightSpeed);
+	    }
+	    
+	    lf.set(leftSpeed * m_maxOutput);
+	    lb.set(-leftSpeed * m_maxOutput);
+	    rf.set(-rightSpeed * m_maxOutput);
+	    rb.set(rightSpeed * m_maxOutput);
+	    
+	    m_safetyHelper.feed();
+	}
+	/**	
+	public void forward(double distance)
+	{
+		while(lenc.getDistance() < distance && renc.getDistance() < distance)
+			tankDrive(0.75, 0.75);
+	}
+	
+	public void turnLeft(double angle)
+	{
+		while(gyro.getAngle() > -angle)
+			tankDrive(-0.75, 0.75);
+		gyro.reset();
+	}
+	
+	public void turnRight(double angle)
+	{
+		while(gyro.getAngle() < angle)
+			tankDrive(0.75, -0.75);
+		gyro.reset();
+	}
+	**/
+	public void setup()
+	{
+		gyro.reset();
+		lenc.reset();
+		renc.reset();
 	}
 
 	@Override
@@ -85,36 +149,3 @@ public class KPDrive extends RobotDriveBase
 	}
 }
 
-/**
-   ,|
-  / ;
- /  \
-: ,'(
-|( `.\
-: \  `\       \.
- \ `.         | `.
-  \  `-._     ;   \
-   \     ``-.'.. _ `._
-    `. `-.            ```-...__
-   .'`.        --..          ``-..____
- ,'.-'`,_-._            ((((   <o.   ,'
-      `' `-.)``-._-...__````  ____.-'
-  SSt    ,'    _,'.--,---------'
-     _.-' _..-'   ),'
-    ``--''        `
-    
-                (`.
-                 \ `.
-                  )  `._..---._
-\`.       __...---`         o  )
- \ `._,--'           ,    ___,'
-  ) ,-._          \  )   _,-'
- /,'    ``--.._____\/--''
-
--shimrod
-
-WHYYYYYYYYY?????????????
-
-
-
-**/
