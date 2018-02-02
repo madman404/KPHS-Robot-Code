@@ -14,9 +14,9 @@ public class Robot extends TimedRobot
 	@Override
 	public void robotInit()
 	{
-		drivetrain = new KPDrive(0, 1, 2, 3, 0, 1, 2, 3);
+		drivetrain = new KPDrive(0, 1, 2, 3, 0, 1, 2, 3, 0, 1);
 		xbox = new XboxController(2);
-		pincer = new ClawArm(4, 4, 5, 6, 7, 8, 0);
+		pincer = new ClawArm(4, 4, 5, 6, 7, 8, 2);
 	}
 
 	@Override
@@ -40,9 +40,14 @@ public class Robot extends TimedRobot
 	@Override
 	public void teleopPeriodic()
 	{
+		if (xbox.getAButton())
+			drivetrain.highGear();
+		else
+			drivetrain.lowGear();
+		
 		drivetrain.XDrive(xbox.getTriggerAxis(Hand.kRight), xbox.getTriggerAxis(Hand.kLeft), xbox.getX(Hand.kLeft));
 		
-		if (xbox.getAButtonPressed())
+		if (xbox.getBButtonPressed())
 			pincer.down();
 		else if (xbox.getYButtonPressed())
 			pincer.up();

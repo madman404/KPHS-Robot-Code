@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.SendableBase;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 
+@Deprecated
 public class KPMotorGroup extends SendableBase implements SpeedController
 {
 	private boolean m_isInverted = false;

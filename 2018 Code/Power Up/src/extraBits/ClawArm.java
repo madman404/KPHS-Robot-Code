@@ -20,14 +20,15 @@ public class ClawArm
 	private byte target = 3;
 	private boolean triggerActivated = false;
 	
-	public ClawArm(int armPWM, int openclawDIO, int closeclawDIO, int ejectorForwardDIO, int ejectorBackwardDIO, int triggerDIO, int potentiometerAI)
+	public ClawArm(int armPWM, int openclawPCM, int closeclawPCM, int ejectorForwardPCM, int ejectorBackwardPCM, int triggerDIO, int potentiometerAI)
 	{
 		arm = new Talon(armPWM);
-		claw = new DoubleSolenoid(closeclawDIO, openclawDIO);
-		ap = new AnalogPotentiometer(potentiometerAI, 340);
+		claw = new DoubleSolenoid(closeclawPCM, openclawPCM);
+		ejector = new DoubleSolenoid(ejectorForwardPCM, ejectorBackwardPCM);
+		ap = new AnalogPotentiometer(potentiometerAI, 340, 10);
 		
-		double p = SmartDashboard.getNumber("DB/Slider 0", 0.1),
-			   i = SmartDashboard.getNumber("DB/Slider 1", 0.001),
+		double p = SmartDashboard.getNumber("DB/Slider 0", 0.5),
+			   i = SmartDashboard.getNumber("DB/Slider 1", 0.0),
 			   d = SmartDashboard.getNumber("DB/Slider 2", 0.0),
 			   f = SmartDashboard.getNumber("DB/Slider 3", 0.0);
 		

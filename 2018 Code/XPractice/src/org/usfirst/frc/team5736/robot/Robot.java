@@ -1,13 +1,14 @@
 package org.usfirst.frc.team5736.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Victor;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Timer;
@@ -15,7 +16,7 @@ import edu.wpi.first.wpilibj.Timer;
 public class Robot extends TimedRobot
 {
 	private DifferentialDrive robot;
-	private Joystick left, right;
+	private XboxController xbox;
 	private Victor lMotor, rMotor, arm;
 	private SpeedControllerGroup sync;
 	private ADXRS450_Gyro gyro;
@@ -32,8 +33,7 @@ public class Robot extends TimedRobot
 		rMotor = new Victor(1);
 		robot = new DifferentialDrive(lMotor, rMotor);
 		sync = new SpeedControllerGroup(lMotor, rMotor);
-		left = new Joystick(0);
-		right = new Joystick(1);
+		xbox = new XboxController(2);
 		arm = new Victor(2);
 		gyro = new ADXRS450_Gyro();
 		controlGyro = new PIDController(0.5, 0.0, 0.0, gyro, sync);
@@ -121,16 +121,16 @@ public class Robot extends TimedRobot
 	@Override
 	public void teleopPeriodic()
 	{
-		robot.tankDrive(-left.getY(), -right.getY());
+		robot.arcadeDrive(xbox.getTriggerAxis(Hand.kRight) - xbox.getTriggerAxis(Hand.kLeft), xbox.getX(Hand.kLeft));
 		
-		if(right.getRawButton(3))
+		if(xbox.getAButton())
 			arm.set(-.4);
-		else if(right.getRawButton(4))
+		else if(xbox.getYButton())
 			arm.set(.4);
 		else
 			arm.set(0);
 		
-		if (right.getRawButtonPressed(1))
+		if (xbox.getXButtonPressed())
 		{
 			if (claw.get().equals(DoubleSolenoid.Value.kReverse))
 				claw.set(DoubleSolenoid.Value.kForward);
@@ -146,7 +146,7 @@ public class Robot extends TimedRobot
 	@Override
 	public void disabledPeriodic()
 	{
-		if (left.getRawButtonPressed(7))
+		if (xbox.getBackButtonPressed())
 		{
 			double p = SmartDashboard.getNumber("DB/Slider 0", 0.0),
 				   i = SmartDashboard.getNumber("DB/Slider 1", 0.0),
@@ -161,7 +161,7 @@ public class Robot extends TimedRobot
 			controlRenc.setD(d);
 			controlRenc.setF(f);
 		}
-		if (left.getRawButtonPressed(8))
+		if (xbox.getStartButtonPressed())
 		{
 			controlGyro.setP(SmartDashboard.getNumber("DB/Slider 0", 0.0));
 			controlGyro.setI(SmartDashboard.getNumber("DB/Slider 1", 0.0));
